@@ -3,13 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const app = (0, express_1.default)();
-const address = "0.0.0.0:3000";
+var express_1 = __importDefault(require("express"));
+var dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+var app = (0, express_1.default)();
+var port = +process.env.PORT;
 app.get("/", function (req, res) {
     res.send("Hello World!");
 });
-app.listen(3000, function () {
-    console.log(`starting app on: ${address}`);
+app.listen(port, function () {
+    console.log("starting app on: ".concat(port));
 });
-//# sourceMappingURL=server.js.map
