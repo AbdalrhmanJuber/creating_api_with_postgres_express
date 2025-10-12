@@ -9,18 +9,40 @@ export interface User {
 
 export class User {
   async getAll(): Promise<User[]> {
-    const result = await pool.query("SELECT * FROM users");
+    const result = await pool.query(
+      `SELECT
+         id,
+         first_name AS "firstName",
+         last_name  AS "lastName",
+         password_hash
+       FROM users`
+    );
     return result.rows;
   }
 
   async getById(id: number): Promise<User | null> {
-    const result = await pool.query("SELECT * FROM users WHERE id = $1", [id]);
+    const result = await pool.query(
+      `SELECT
+         id,
+         first_name AS "firstName",
+         last_name  AS "lastName",
+         password_hash
+       FROM users
+       WHERE id = $1`,
+      [id]
+    );
     return result.rows[0] || null;
   }
 
   async create(user: User): Promise<User> {
     const result = await pool.query(
-      "INSERT INTO users (firstName, lastName, password_hash) VALUES($1, $2, $3) RETURNING *",
+      `INSERT INTO users (first_name, last_name, password_hash)
+       VALUES ($1, $2, $3)
+       RETURNING
+         id,
+         first_name AS "firstName",
+         last_name  AS "lastName",
+         password_hash`,
       [user.firstName, user.lastName, user.password_hash],
     );
     return result.rows[0];
@@ -28,7 +50,16 @@ export class User {
 
   async update(id: number, user: User): Promise<User | null> {
     const result = await pool.query(
-      "UPDATE users SET firstName = $1, lastName = $2, password_hash = $3 where id = $4 RETURNING *",
+      `UPDATE users
+         SET first_name = $1,
+             last_name  = $2,
+             password_hash = $3
+       WHERE id = $4
+       RETURNING
+         id,
+         first_name AS "firstName",
+         last_name  AS "lastName",
+         password_hash`,
       [user.firstName, user.lastName, user.password_hash, id],
     );
     return result.rows[0] || null;
