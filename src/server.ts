@@ -7,6 +7,8 @@ dotenv.config();
 const app: express.Application = express();
 const port: number = +process.env.PORT!;
 
+app.use(express.json());
+
 app.use('/api/users', userRoutes);
 
 app.get("/", function (req: Request, res: Response) {

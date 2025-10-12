@@ -10,10 +10,12 @@
     "dev": "ts-node src/server.ts",
     "watch": "tsc-watch --esModuleInterop src/server.ts --outDir ./dist --onSuccess \"node ./dist/server.js\"",
     "test": "ts-node node_modules/jasmine/bin/jasmine.js",
+    "pretest": "npm run migrate:test",
     "build": "tsc",
     "migrate:up": "db-migrate up --config ./database.js",
     "migrate:down": "db-migrate down --config ./database.js",
-    "migrate:create": "db-migrate create --config ./database.js"
+    "migrate:create": "db-migrate create --config ./database.js",
+    "migrate:test": "db-migrate up --config ./database.js --env test"
   },
   "dependencies": {
     "db-migrate": "^0.11.14",

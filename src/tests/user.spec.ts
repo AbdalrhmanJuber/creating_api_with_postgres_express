@@ -11,10 +11,6 @@ describe("User Api Endpoints", () => {
     await pool.query("DELETE FROM users;");
   });
 
-  afterAll(async () => {
-    await pool.end();
-  });
-
   it("should create a new user", async () => {
     const res = await request.post("/api/users").send({
       firstName: "Alice",

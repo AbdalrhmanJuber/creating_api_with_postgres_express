@@ -5,10 +5,6 @@ beforeAll(async () => {
   expect(res.rows[0].connected).toBe(1);
 });
 
-afterAll(async () => {
-  await pool.end(); // close all connections
-});
-
 describe("PostgreSQL Database Connection", () => {
   it("should connect successfully", async () => {
     const res = await pool.query("SELECT 1 AS ok");
