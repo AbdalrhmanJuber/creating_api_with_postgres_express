@@ -1,9 +1,114 @@
 import { client, connectDB } from "./database";
+beforeAll(async () => {
+  await connectDB();
+});
 
+afterAll(async () => {
+  await client.end();
+});
 describe("PostgreSQL Database Connection", () => {
   it("should connect successfully", async () => {
+    const res = await client.query("SELECT 1 AS ok");
+    expect(res.rows[0].ok).toBe(1);
+  });
+});
 
-    await expectAsync(connectDB()).toBeResolved();
-    await client.end(); // Close connection after test
+describe("Checking the users table", () => {
+  it("should verify that table 'users' exists", async () => {
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'users'
+      ) AS exists;
+    `);
+    expect(result.rows[0].exists).toBeTrue();
+  });
+  it("should verify that all columns exist in 'users' table", async () => {
+    const columns = ["id", "firstName", "lastName", "password"];
+    const result = await client.query(
+      `
+    SELECT COUNT(*) AS col_count
+    FROM information_schema.columns
+    WHERE table_name = 'users'
+      AND column_name = ANY($1)
+  `,
+      [columns],
+    );
+    // Should equal the number of columns you're checking
+    expect(Number(result.rows[0].col_count)).toBe(columns.length);
+  });
+});
+describe("Checking the table products", () => {
+  it("should verify that table 'products' exists", async () => {
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'products'
+) AS exists;
+`);
+    expect(result.rows[0].exists).toBeTrue();
+  });
+  it("should verify that all columns exist in 'products' table", async () => {
+    const columns = ["id", "name", "price", "category"];
+    const result = await client.query(
+      `
+    SELECT COUNT(*) AS col_count
+    FROM information_schema.columns
+    WHERE table_name = 'products'
+      AND column_name = ANY($1)
+  `,
+      [columns],
+    );
+    expect(Number(result.rows[0].col_count)).toBe(columns.length);
+  });
+});
+
+describe("Checking the table orders", () => {
+  it("should verify that table 'orders' exists", async () => {
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'orders'
+) AS exists;
+`);
+    expect(result.rows[0].exists).toBeTrue();
+  });
+  it("should verify that all columns exist in 'products' table", async () => {
+    const columns = ["id", "status", "user_id"];
+    const result = await client.query(
+      `
+    SELECT COUNT(*) AS col_count
+    FROM information_schema.columns
+    WHERE table_name = 'orders'
+      AND column_name = ANY($1)
+  `,
+      [columns],
+    );
+    expect(Number(result.rows[0].col_count)).toBe(columns.length);
+  });
+});
+
+describe("Checking the table orderitem", () => {
+  it("should verify that table 'orderitem' exists", async () => {
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'orderitem'
+) AS exists;
+`);
+    expect(result.rows[0].exists).toBeTrue();
+  });
+  it("should verify that all columns exist in 'orderitem' table", async () => {
+    const columns = ["id", "quantity", "order_id", "product_id"];
+    const result = await client.query(
+      `
+    SELECT COUNT(*) AS col_count
+    FROM information_schema.columns
+    WHERE table_name = 'orderitem'
+      AND column_name = ANY($1)
+  `,
+      [columns],
+    );
+    expect(Number(result.rows[0].col_count)).toBe(columns.length);
   });
 });

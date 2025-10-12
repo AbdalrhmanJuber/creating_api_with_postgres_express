@@ -15,16 +15,21 @@ exports.setup = function (options, seedLink) {
 };
 
 exports.up = function (db) {
-  return db.createTable("users", {
-    id: { type: "int", primaryKey: true, autoIncrement: true },
-    firstName: "string",
-    lastName: "string",
-    password: "string"
-  });
+  return db.runSql(`
+    CREATE TABLE orders (
+    id SERIAL PRIMARY KEY,
+    status VARCHAR(255),
+    user_id INTEGER,
+    CONSTRAINT fk_user
+    FOREIGN KEY(user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+);
+`);
 };
 
 exports.down = function (db) {
-  return db.dropTable("users");
+  return db.runSql(`DROP TABLE orders`);
 };
 
 exports._meta = {
