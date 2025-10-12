@@ -1,18 +1,20 @@
-FROM node:18-alpine
-
+# Build stage (with devDependencies for testing)
+FROM node:18-alpine AS builder
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy source code
+RUN npm install --include=dev
 COPY . .
 
-# Expose port
-EXPOSE 3000
+# Test stage
+FROM builder AS test
+CMD ["npm", "run", "test"]
 
-# Start the application
-CMD ["npm", "run", "watch"]
+# Production stage (without devDependencies)
+FROM node:18-alpine AS production
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+
