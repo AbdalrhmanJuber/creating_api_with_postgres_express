@@ -71,4 +71,19 @@ export class UserController {
       res.status(500).json({ message: "Internal server error" });
     }
   }
+  async authenticateUser(req: Request, res: Response) {
+    try {
+      const { firstName, password_hash } = req.body;
+      const user = await userModel.authenticate(firstName, password_hash);
+
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      res.json({ message: "Login successful", user });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Server error" });
+    }
+  }
 }

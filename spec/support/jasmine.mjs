@@ -4,7 +4,7 @@ export default {
   helpers:["/app/helpers/**/*.js"],
   env: {
     stopSpecOnExpectationFailure: false,
-    random: true,
+    random: false,
     forbidDuplicateNames: true,
   },
 };

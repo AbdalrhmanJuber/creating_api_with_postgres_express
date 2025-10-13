@@ -1,4 +1,8 @@
-import pool from "../conifg/database";
+import pool from "../config/database";
+import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+
+dotenv.config();
 
 export interface User {
   id?: number;
@@ -8,14 +12,28 @@ export interface User {
 }
 
 export class User {
+  private pepper = process.env.BCRYPT_PASSWORD || "";
+  private saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
+
+  private async hashPassword(password: string): Promise<string> {
+    const saltedPassword = password + this.pepper;
+    const salt = await bcrypt.genSalt(this.saltRounds);
+    const hash = await bcrypt.hash(saltedPassword, salt);
+    return hash;
+  }
+
+  private async comparePassword(password: string, hash: string): Promise<boolean> {
+    const saltedPassword = password + this.pepper;
+    return await bcrypt.compare(saltedPassword, hash);
+  }
   async getAll(): Promise<User[]> {
     const result = await pool.query(
       `SELECT
          id,
-         firstname AS "firstName",
-         lastname  AS "lastName",
-         password  AS "password_hash"
-       FROM users`
+         "firstName" AS "firstName",
+         "lastName"  AS "lastName",
+         "password"  AS "password_hash"
+       FROM users`,
     );
     return result.rows;
   }
@@ -24,43 +42,45 @@ export class User {
     const result = await pool.query(
       `SELECT
          id,
-         firstname AS "firstName",
-         lastname  AS "lastName",
-         password  AS "password_hash"
+         "firstName" AS "firstName",
+         "lastName"  AS "lastName",
+         "password"  AS "password_hash"
        FROM users
        WHERE id = $1`,
-      [id]
+      [id],
     );
     return result.rows[0] || null;
   }
 
   async create(user: User): Promise<User> {
+    const hashedPassword = await this.hashPassword(user.password_hash);
     const result = await pool.query(
-      `INSERT INTO users (firstname, lastname, password)
+      `INSERT INTO users ("firstName", "lastName", "password")
        VALUES ($1, $2, $3)
        RETURNING
          id,
-         firstname AS "firstName",
-         lastname  AS "lastName",
-         password  AS "password_hash"`,
-      [user.firstName, user.lastName, user.password_hash],
+         "firstName" AS "firstName",
+         "lastName"  AS "lastName",
+         "password"  AS "password_hash"`,
+      [user.firstName, user.lastName, hashedPassword],
     );
     return result.rows[0];
   }
 
   async update(id: number, user: User): Promise<User | null> {
+    const hashedPassword = await this.hashPassword(user.password_hash);
     const result = await pool.query(
       `UPDATE users
-         SET firstname = $1,
-             lastname  = $2,
-             password  = $3
+         SET "firstName" = $1,
+             "lastName"  = $2,
+             "password"  = $3
        WHERE id = $4
        RETURNING
          id,
-         firstname AS "firstName",
-         lastname  AS "lastName",
-         password  AS "password_hash"`,
-      [user.firstName, user.lastName, user.password_hash, id],
+         "firstName" AS "firstName",
+         "lastName"  AS "lastName",
+         "password"  AS "password_hash"`,
+      [user.firstName, user.lastName, hashedPassword, id],
     );
     return result.rows[0] || null;
   }
@@ -68,5 +88,20 @@ export class User {
   async delete(id: number): Promise<boolean> {
     const result = await pool.query("DELETE FROM users WHERE id = $1", [id]);
     return result.rowCount! > 0;
+  }
+
+  async authenticate(firstName: string, password: string): Promise<User | null> {
+    const result = await pool.query(
+      `SELECT id, "firstName", "lastName", "password" AS "password_hash"
+        FROM users
+        WHERE "firstName" = $1`, [firstName]
+    );
+
+    const user = result.rows[0];
+
+    if (user && (await this.comparePassword(password, user.password_hash))) {
+      return user;
+    }
+    return null;
   }
 }

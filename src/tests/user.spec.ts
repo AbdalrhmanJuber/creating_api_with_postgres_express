@@ -1,6 +1,6 @@
 import supertest from "supertest";
 import app from "../server";
-import pool from "../conifg/database";
+import pool from "../config/database";
 
 const request = supertest(app);
 
@@ -51,6 +51,6 @@ describe("User Api Endpoints", () => {
   it("should  return 404 for non-existing user", async () => {
     const res = await request.get("/api/users/099999");
     expect(res.status).toBe(404);
-    expect(res.body.messagee).toBe("User not found");
+    expect(res.body.message).toBe("User not found");
   });
 });
