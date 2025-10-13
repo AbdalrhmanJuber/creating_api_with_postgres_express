@@ -53,4 +53,26 @@ describe("User Api Endpoints", () => {
     expect(res.status).toBe(404);
     expect(res.body.message).toBe("User not found");
   });
+
+  it("should return Missing required fields: firstName, lastName, password_hash", async () => {
+    const res = await request.post("/api/users/").send({
+      firstName: "Updated",
+      password_hash: "new_password",
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe(
+      "Missing required fields: firstName, lastName, password_hash",
+    );
+  });
+
+  it("should return password must be atlest of length 6", async () => {
+    const res = await request.post("/api/users/").send({
+      firstName: "Alice",
+      lastName: "Smith",
+      password_hash: "1234",
+    })
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe("Password must be at least 6 characters long");
+  })
 });

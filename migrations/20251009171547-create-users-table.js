@@ -14,14 +14,16 @@ exports.setup = function (options, seedLink) {
   seed = seedLink;
 };
 
+
 exports.up = function (db) {
   return db.createTable("users", {
     id: { type: "int", primaryKey: true, autoIncrement: true },
-    firstName: "string",
-    lastName: "string",
-    password: "string"
+    firstName: { type: "string", notNull: true },
+    lastName: { type: "string", notNull: true },
+    password: { type: "string", notNull: true },
   });
 };
+
 
 exports.down = function (db) {
   return db.dropTable("users");
