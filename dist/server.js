@@ -11,7 +11,7 @@ const app = (0, express_1.default)();
 const port = +process.env.PORT;
 app.use(express_1.default.json());
 app.use('/api/users', userRoutes_1.default);
-app.get("/", function (req, res) {
+app.get("/", function (_req, res) {
     res.send("Hello World!");
 });
 app.listen(port, function () {

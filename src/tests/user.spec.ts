@@ -15,7 +15,7 @@ describe("User Api Endpoints", () => {
     const res = await request.post("/api/users").send({
       firstName: "Alice",
       lastName: "Smith",
-      password_hash: "hashed_password_123",
+      password: "hashed_password_123",
     });
 
     expect(res.status).toBe(201);
@@ -34,7 +34,7 @@ describe("User Api Endpoints", () => {
     const res = await request.put(`/api/users/${userId}`).send({
       firstName: "Updated",
       lastName: "Name",
-      password_hash: "new_password",
+      password: "new_password",
     });
 
     expect(res.status).toBe(200);
@@ -54,14 +54,14 @@ describe("User Api Endpoints", () => {
     expect(res.body.message).toBe("User not found");
   });
 
-  it("should return Missing required fields: firstName, lastName, password_hash", async () => {
+  it("should return Missing required fields: firstName, lastName, password", async () => {
     const res = await request.post("/api/users/").send({
       firstName: "Updated",
-      password_hash: "new_password",
+      password: "new_password",
     });
     expect(res.status).toBe(400);
     expect(res.body.message).toBe(
-      "Missing required fields: firstName, lastName, password_hash",
+      "Missing required fields: firstName, lastName, password",
     );
   });
 
@@ -69,7 +69,7 @@ describe("User Api Endpoints", () => {
     const res = await request.post("/api/users/").send({
       firstName: "Alice",
       lastName: "Smith",
-      password_hash: "1234",
+      password: "1234",
     })
 
     expect(res.status).toBe(400);

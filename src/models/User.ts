@@ -8,7 +8,7 @@ export interface User {
   id?: number;
   firstName: string;
   lastName: string;
-  password_hash: string;
+  password: string;
 }
 
 export class User {
@@ -22,7 +22,10 @@ export class User {
     return hash;
   }
 
-  private async comparePassword(password: string, hash: string): Promise<boolean> {
+  private async comparePassword(
+    password: string,
+    hash: string,
+  ): Promise<boolean> {
     const saltedPassword = password + this.pepper;
     return await bcrypt.compare(saltedPassword, hash);
   }
@@ -30,9 +33,9 @@ export class User {
     const result = await pool.query(
       `SELECT
          id,
-         "firstName" AS "firstName",
-         "lastName"  AS "lastName",
-         "password"  AS "password_hash"
+         "firstName",
+         "lastName" ,
+         "password"        
        FROM users`,
     );
     return result.rows;
@@ -42,9 +45,9 @@ export class User {
     const result = await pool.query(
       `SELECT
          id,
-         "firstName" AS "firstName",
-         "lastName"  AS "lastName",
-         "password"  AS "password_hash"
+         "firstName",
+         "lastName" ,
+         "password"
        FROM users
        WHERE id = $1`,
       [id],
@@ -53,22 +56,22 @@ export class User {
   }
 
   async create(user: User): Promise<User> {
-    const hashedPassword = await this.hashPassword(user.password_hash);
+    const hashedPassword = await this.hashPassword(user.password);
     const result = await pool.query(
       `INSERT INTO users ("firstName", "lastName", "password")
        VALUES ($1, $2, $3)
        RETURNING
          id,
-         "firstName" AS "firstName",
-         "lastName"  AS "lastName",
-         "password"  AS "password_hash"`,
+         "firstName",
+         "lastName" ,
+         "password" `,
       [user.firstName, user.lastName, hashedPassword],
     );
     return result.rows[0];
   }
 
   async update(id: number, user: User): Promise<User | null> {
-    const hashedPassword = await this.hashPassword(user.password_hash);
+    const hashedPassword = await this.hashPassword(user.password);
     const result = await pool.query(
       `UPDATE users
          SET "firstName" = $1,
@@ -77,9 +80,9 @@ export class User {
        WHERE id = $4
        RETURNING
          id,
-         "firstName" AS "firstName",
-         "lastName"  AS "lastName",
-         "password"  AS "password_hash"`,
+         "firstName" ,
+         "lastName" ,
+         "password" `,
       [user.firstName, user.lastName, hashedPassword, id],
     );
     return result.rows[0] || null;
@@ -90,16 +93,20 @@ export class User {
     return result.rowCount! > 0;
   }
 
-  async authenticate(firstName: string, password: string): Promise<User | null> {
+  async authenticate(
+    firstName: string,
+    password: string,
+  ): Promise<User | null> {
     const result = await pool.query(
-      `SELECT id, "firstName", "lastName", "password" AS "password_hash"
+      `SELECT id, "firstName", "lastName", "password"
         FROM users
-        WHERE "firstName" = $1`, [firstName]
+        WHERE "firstName" = $1`,
+      [firstName],
     );
 
     const user = result.rows[0];
 
-    if (user && (await this.comparePassword(password, user.password_hash))) {
+    if (user && (await this.comparePassword(password, user.password))) {
       return user;
     }
     return null;
