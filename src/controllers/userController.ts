@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import { User } from "../models/User";
+import { User, IUser } from "../models/User";
 import { generateToken } from "../helpers/jwt";
+import { parseId, ValidationError } from "../utils/validators";
 
 const userModel = new User();
 
@@ -11,23 +12,23 @@ export class UserController {
     try {
       const users = await userModel.getAll();
       res.json(users);
-    } catch {
+    } catch (error) {
+      console.error("Error getting all users:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
 
   async getById(req: Request<IdParams>, res: Response) {
     try {
-      const idParam = req.params?.id;
-      if (!idParam || !/^\d+$/.test(idParam)) {
-        return res.status(400).json({ message: "Invalid user id" });
-      }
-      const id = Number.parseInt(idParam, 10);
-
+      const id = parseId(req.params?.id, "user");
       const user = await userModel.getById(id);
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
-    } catch {
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return res.status(400).json({ message: error.message });
+      }
+      console.error("Error getting user by ID:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -46,39 +47,38 @@ export class UserController {
         ...newUser,
         token: token,
       });
-    } catch {
+    } catch (error) {
+      console.error("Error creating user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
 
   async update(req: Request<IdParams>, res: Response) {
     try {
-      const idParam = req.params?.id;
-      if (!idParam || !/^\d+$/.test(idParam)) {
-        return res.status(400).json({ message: "Invalid user id" });
-      }
-      const id = Number.parseInt(idParam, 10);
-
+      const id = parseId(req.params?.id, "user");
       const updated = await userModel.update(id, req.body);
       if (!updated) return res.status(404).json({ message: "User not found" });
       res.json(updated);
-    } catch {
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return res.status(400).json({ message: error.message });
+      }
+      console.error("Error updating user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
 
   async delete(req: Request<IdParams>, res: Response) {
     try {
-      const idParam = req.params?.id;
-      if (!idParam || !/^\d+$/.test(idParam)) {
-        return res.status(400).json({ message: "Invalid user id" });
-      }
-      const id = Number.parseInt(idParam, 10);
-
+      const id = parseId(req.params?.id, "user");
       const deleted = await userModel.delete(id);
       if (!deleted) return res.status(404).json({ message: "User not found" });
       res.json({ message: "User deleted" });
-    } catch {
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return res.status(400).json({ message: error.message });
+      }
+      console.error("Error deleting user:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -100,7 +100,11 @@ export class UserController {
 
       res.json({
         message: "Login successful",
-        user,
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
         token: token,
       });
     } catch (err) {

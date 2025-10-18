@@ -4,62 +4,80 @@ import pool from "../config/database";
 
 const request = supertest(app);
 
-describe("Product Api Endpoints", () => {
+describe("Product API Endpoints", () => {
   let userId: number;
   let productId: number;
   let authToken: string;
 
   beforeAll(async () => {
-    await pool.query("DELETE FROM users;DELETE FROM products;");
-  });
+    // Clean up database before tests
+    await pool.query("DELETE FROM products; DELETE FROM users;");
 
-  it("should create a new user", async () => {
-    const res = await request.post("/api/users").send({
+    // Create a test user for authentication
+    const userRes = await request.post("/api/users").send({
       firstName: "Alice",
       lastName: "Smith",
       password: "hashed_password_123",
     });
 
-    expect(res.status).toBe(201);
-    expect(res.body).toBeDefined();
-    expect(res.body.firstName).toBe("Alice");
-    userId = res.body.id;
-
-    authToken = res.body.token;
-    expect(authToken).toBeDefined();
+    userId = userRes.body.id;
+    authToken = userRes.body.token;
   });
 
-  it("should create a new product", async () => {
-    const res = await request.post("/api/products")
-      .set("Authorization", `Bearer ${authToken}`)
-      .send({
-      name: "Apple",
-      price: 15,
-      category: "Fruit",
+  describe("POST /api/products - Create Product", () => {
+    it("should create a new product successfully", async () => {
+      const res = await request
+        .post("/api/products")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          name: "Apple",
+          price: 15,
+          category: "Fruit",
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toBeDefined();
+      expect(res.body.name).toBe("Apple");
+      expect(res.body.price).toBe(15);
+      expect(res.body.category).toBe("Fruit");
+
+      // Store for subsequent tests
+      productId = res.body.id;
     });
-
-    expect(res.status).toBe(201);
-    expect(res.body).toBeDefined();
-    expect(res.body.name).toBe("Apple");
-    productId = res.body.id;
   });
 
-  it("should show all products", async () => {
-    const res = await request.get(`/api/products/`);
-    expect(res.status).toBe(200);
+  describe("GET /api/products - Get All Products", () => {
+    it("should retrieve all products successfully", async () => {
+      const res = await request.get("/api/products");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toBeDefined();
+      expect(Array.isArray(res.body)).toBe(true);
+    });
   });
 
-  it("should show a specific product by id product", async () => {
-    const res = await request.get(`/api/products/id/${productId}`);
+  describe("GET /api/products/id/:id - Get Product by ID", () => {
+    it("should retrieve a specific product by ID successfully", async () => {
+      const res = await request.get(`/api/products/id/${productId}`);
 
-    expect(res.status).toBe(200);
-    expect(res.body.name).toBe("Apple");
-    expect(res.body.price).toBe(15);
-    expect(res.body.category).toBe("Fruit");
+      expect(res.status).toBe(200);
+      expect(res.body.id).toBe(productId);
+      expect(res.body.name).toBe("Apple");
+      expect(res.body.price).toBe(15);
+      expect(res.body.category).toBe("Fruit");
+    });
   });
-  it("should show a specific product by category product", async () => {
-    const res = await request.get(`/api/products/category/Fruit}`);
 
-    expect(res.status).toBe(200);
+  describe("GET /api/products/category/:category - Get Products by Category", () => {
+    it("should retrieve products by category successfully", async () => {
+      const res = await request.get("/api/products/category/Fruit");
+
+      expect(res.status).toBe(200);
+      expect(res.body).toBeDefined();
+      expect(Array.isArray(res.body)).toBe(true);
+      if (res.body.length > 0) {
+        expect(res.body[0].category).toBe("Fruit");
+      }
+    });
   });
 });

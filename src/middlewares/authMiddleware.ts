@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export const authinticate = (
+export const authenticate = (
   req: Request,
   res: Response,
   next: NextFunction,

@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 
 dotenv.config();
 
-export interface User {
+export interface IUser {
   id?: number;
   firstName: string;
   lastName: string;
@@ -29,7 +29,7 @@ export class User {
     const saltedPassword = password + this.pepper;
     return await bcrypt.compare(saltedPassword, hash);
   }
-  async getAll(): Promise<User[]> {
+  async getAll(): Promise<IUser[]> {
     const result = await pool.query(
       `SELECT
          id,
@@ -41,7 +41,7 @@ export class User {
     return result.rows;
   }
 
-  async getById(id: number): Promise<User | null> {
+  async getById(id: number): Promise<IUser | null> {
     const result = await pool.query(
       `SELECT
 
@@ -56,7 +56,7 @@ export class User {
     return result.rows[0] || null;
   }
 
-  async create(user: User): Promise<User> {
+  async create(user: IUser): Promise<IUser> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await pool.query(
       `INSERT INTO users ("firstName", "lastName", "password") VALUES ($1, $2, $3) RETURNING id, "firstName",
@@ -67,7 +67,7 @@ export class User {
     return result.rows[0];
   }
 
-  async update(id: number, user: User): Promise<User | null> {
+  async update(id: number, user: IUser): Promise<IUser | null> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await pool.query(
       `UPDATE users
@@ -93,7 +93,7 @@ export class User {
   async authenticate(
     firstName: string,
     password: string,
-  ): Promise<User | null> {
+  ): Promise<IUser | null> {
     const result = await pool.query(
       `SELECT id, "firstName", "lastName", "password"
         FROM users
