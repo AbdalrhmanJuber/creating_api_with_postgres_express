@@ -1,12 +1,13 @@
 import express, { Request, Response } from "express";
 import userRoutes from "./routes/userRoutes";
 import productRoutes from "./routes/productRoutes";
-import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import { validateEnv } from "./config/env";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middlewares/errorHandler";
 import { RATE_LIMIT } from "./config/constants";
+import morgan from "morgan";
+import { apiRateLimit } from "./config/rateLimits";
 
 dotenv.config();
 
@@ -16,15 +17,11 @@ validateEnv();
 const app: express.Application = express();
 const port: number = +process.env.PORT!;
 
-if (process.env.NODE_ENV !== "test") {
-  const limiter = rateLimit({
-    windowMs: RATE_LIMIT.WINDOW_MS,
-    max: RATE_LIMIT.MAX_REQUESTS,
-  });
-  app.use(limiter);
-}
-
+app.use(apiRateLimit);
 app.use(express.json());
+
+const logFormat = process.env.NODE_ENV === "production" ? "combined" : "dev";
+app.use(morgan(logFormat));
 
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);

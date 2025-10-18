@@ -1,4 +1,4 @@
-import pool from "../config/database";
+import { Pool } from "pg";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 
@@ -15,6 +15,7 @@ export class User {
   private pepper = process.env.BCRYPT_PASSWORD || "";
   private saltRounds = parseInt(process.env.SALT_ROUNDS || "10", 10);
 
+  constructor(private pool: Pool) {}
   private async hashPassword(password: string): Promise<string> {
     const saltedPassword = password + this.pepper;
     const salt = await bcrypt.genSalt(this.saltRounds);
@@ -30,7 +31,7 @@ export class User {
     return await bcrypt.compare(saltedPassword, hash);
   }
   async getAll(): Promise<IUser[]> {
-    const result = await pool.query(
+    const result = await this.pool.query(
       `SELECT
          id,
          "firstName",
@@ -42,7 +43,7 @@ export class User {
   }
 
   async getById(id: number): Promise<IUser | null> {
-    const result = await pool.query(
+    const result = await this.pool.query(
       `SELECT
 
          id,
@@ -58,7 +59,7 @@ export class User {
 
   async create(user: IUser): Promise<IUser> {
     const hashedPassword = await this.hashPassword(user.password);
-    const result = await pool.query(
+    const result = await this.pool.query(
       `INSERT INTO users ("firstName", "lastName", "password") VALUES ($1, $2, $3) RETURNING id, "firstName",
          "lastName" ,
          "password" `,
@@ -69,7 +70,7 @@ export class User {
 
   async update(id: number, user: IUser): Promise<IUser | null> {
     const hashedPassword = await this.hashPassword(user.password);
-    const result = await pool.query(
+    const result = await this.pool.query(
       `UPDATE users
          SET "firstName" = $1,
              "lastName"  = $2,
@@ -86,7 +87,7 @@ export class User {
   }
 
   async delete(id: number): Promise<boolean> {
-    const result = await pool.query("DELETE FROM users WHERE id = $1", [id]);
+    const result = await this.pool.query("DELETE FROM users WHERE id = $1", [id]);
     return result.rowCount! > 0;
   }
 
@@ -94,7 +95,7 @@ export class User {
     firstName: string,
     password: string,
   ): Promise<IUser | null> {
-    const result = await pool.query(
+    const result = await this.pool.query(
       `SELECT id, "firstName", "lastName", "password"
         FROM users
         WHERE "firstName" = $1`,

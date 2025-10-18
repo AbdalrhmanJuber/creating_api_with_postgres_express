@@ -3,14 +3,16 @@ import { User, IUser } from "../models/User";
 import { generateToken } from "../helpers/jwt";
 import { parseId, ValidationError } from "../utils/validators";
 
-const userModel = new User();
 
 type IdParams = { id: string };
 
 export class UserController {
+   
+  constructor(private userModel: User) {}
+
   async getAll(req: Request, res: Response) {
     try {
-      const users = await userModel.getAll();
+      const users = await this.userModel.getAll();
       res.json(users);
     } catch (error) {
       console.error("Error getting all users:", error);
@@ -21,7 +23,7 @@ export class UserController {
   async getById(req: Request<IdParams>, res: Response) {
     try {
       const id = parseId(req.params?.id, "user");
-      const user = await userModel.getById(id);
+      const user = await this.userModel.getById(id);
       if (!user) return res.status(404).json({ message: "User not found" });
       res.json(user);
     } catch (error) {
@@ -35,7 +37,7 @@ export class UserController {
 
   async create(req: Request, res: Response) {
     try {
-      const newUser = await userModel.create(req.body);
+      const newUser = await this.userModel.create(req.body);
 
       const token = generateToken({
         id: newUser.id!,
@@ -56,7 +58,7 @@ export class UserController {
   async update(req: Request<IdParams>, res: Response) {
     try {
       const id = parseId(req.params?.id, "user");
-      const updated = await userModel.update(id, req.body);
+      const updated = await this.userModel.update(id, req.body);
       if (!updated) return res.status(404).json({ message: "User not found" });
       res.json(updated);
     } catch (error) {
@@ -71,7 +73,7 @@ export class UserController {
   async delete(req: Request<IdParams>, res: Response) {
     try {
       const id = parseId(req.params?.id, "user");
-      const deleted = await userModel.delete(id);
+      const deleted = await this.userModel.delete(id);
       if (!deleted) return res.status(404).json({ message: "User not found" });
       res.json({ message: "User deleted" });
     } catch (error) {
@@ -86,7 +88,7 @@ export class UserController {
   async authenticateUser(req: Request, res: Response) {
     try {
       const { firstName, password } = req.body;
-      const user = await userModel.authenticate(firstName, password);
+      const user = await this.userModel.authenticate(firstName, password);
 
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
