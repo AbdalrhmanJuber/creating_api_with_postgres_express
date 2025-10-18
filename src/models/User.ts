@@ -35,7 +35,7 @@ export class User {
          id,
          "firstName",
          "lastName" ,
-         "password"        
+         "password"
        FROM users`,
     );
     return result.rows;
@@ -44,6 +44,7 @@ export class User {
   async getById(id: number): Promise<User | null> {
     const result = await pool.query(
       `SELECT
+
          id,
          "firstName",
          "lastName" ,
@@ -58,11 +59,7 @@ export class User {
   async create(user: User): Promise<User> {
     const hashedPassword = await this.hashPassword(user.password);
     const result = await pool.query(
-      `INSERT INTO users ("firstName", "lastName", "password")
-       VALUES ($1, $2, $3)
-       RETURNING
-         id,
-         "firstName",
+      `INSERT INTO users ("firstName", "lastName", "password") VALUES ($1, $2, $3) RETURNING id, "firstName",
          "lastName" ,
          "password" `,
       [user.firstName, user.lastName, hashedPassword],

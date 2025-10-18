@@ -34,10 +34,18 @@ export class UserController {
 
   async create(req: Request, res: Response) {
     try {
-      const findUser = await userModel.getById(req.body.id);
-      if (findUser) return res.status(400).send({ message: "The user id cannot be used!" });
       const newUser = await userModel.create(req.body);
-      res.status(201).json(newUser);
+
+      const token = generateToken({
+        id: newUser.id!,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+      });
+
+      res.status(201).json({
+        ...newUser,
+        token: token,
+      });
     } catch {
       res.status(500).json({ message: "Internal server error" });
     }
@@ -74,6 +82,7 @@ export class UserController {
       res.status(500).json({ message: "Internal server error" });
     }
   }
+
   async authenticateUser(req: Request, res: Response) {
     try {
       const { firstName, password } = req.body;
@@ -82,22 +91,18 @@ export class UserController {
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
+
       const token = generateToken({
         id: user.id!,
-        firstName: user.firstName!,
-        lastName: user.lastName!,
+        firstName: user.firstName,
+        lastName: user.lastName,
       });
 
       res.json({
         message: "Login successful",
-        token,
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
+        user,
+        token: token,
       });
-
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server error" });

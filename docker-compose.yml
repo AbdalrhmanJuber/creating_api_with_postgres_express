@@ -1,4 +1,4 @@
-
+version: "3.9"
 services:
   postgres:
     image: postgres:15
@@ -18,11 +18,35 @@ services:
       timeout: 5s
       retries: 5
 
+  # Development service
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: store_front_api_app_dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Production service
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production   # Use production stage for server
+      target: production
     container_name: store_front_api_app
     ports:
       - "3000:3000"
@@ -35,15 +59,13 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - .:/app
-      - /app/node_modules
 
+  # Test service
   app-test:
     build:
       context: .
       dockerfile: Dockerfile
-      target: test         # Use test stage for running tests
+      target: test
     container_name: store_front_api_app_test
     depends_on:
       postgres:
@@ -53,11 +75,8 @@ services:
       DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${TEST_DB_NAME}  # Separate test database
+      DB_NAME: ${TEST_DB_NAME}
     command: sh -c "npm run migrate:test && npm run test"
-    volumes:
-      - .:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:

@@ -6,6 +6,7 @@ const request = supertest(app);
 
 describe("User Api Endpoints", () => {
   let userId: number;
+  let authToken: string;
 
   beforeAll(async () => {
     await pool.query("DELETE FROM users;");
@@ -22,34 +23,48 @@ describe("User Api Endpoints", () => {
     expect(res.body).toBeDefined();
     expect(res.body.firstName).toBe("Alice");
     userId = res.body.id;
+
+    authToken = res.body.token;
+    expect(authToken).toBeDefined();
   });
 
   it("should get a user by ID", async () => {
-    const res = await request.get(`/api/users/${userId}`);
+    const res = await request
+      .get(`/api/users/${userId}`)
+      .set("Authorization", `Bearer ${authToken}`);
+    
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(userId);
   });
 
   it("should update a user", async () => {
-    const res = await request.put(`/api/users/${userId}`).send({
-      firstName: "Updated",
-      lastName: "Name",
-      password: "new_password",
-    });
+    const res = await request
+      .put(`/api/users/${userId}`)
+      .set("Authorization", `Bearer ${authToken}`)
+      .send({
+        firstName: "Updated",
+        lastName: "Name",
+        password: "new_password",
+      });
 
     expect(res.status).toBe(200);
     expect(res.body.firstName).toBe("Updated");
   });
 
   it("should delete a user", async () => {
-    const res = await request.delete(`/api/users/${userId}`);
+    const res = await request
+      .delete(`/api/users/${userId}`)
+      .set("Authorization", `Bearer ${authToken}`);
 
     expect(res.status).toBe(200);
     expect(res.body.message).toBe("User deleted");
   });
 
   it("should  return 404 for non-existing user", async () => {
-    const res = await request.get("/api/users/099999");
+    const res = await request
+      .get("/api/users/099999")
+      .set("Authorization", `Bearer ${authToken}`);
+    
     expect(res.status).toBe(404);
     expect(res.body.message).toBe("User not found");
   });

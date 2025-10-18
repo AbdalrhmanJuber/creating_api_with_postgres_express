@@ -1,8 +1,8 @@
 # Storefront Backend Project
-to run the database test:
-docker compose up --build app-test
-To run the app:
-docker compose up --build app
+Action	Command
+Dev mode (hot reload)	docker compose up app-dev --build
+Production	docker compose up app --build
+Run tests	docker compose up app-test --build
 ## Getting Started
 
 This repo contains a basic Node and Express app to get you started in constructing an API. To get started, clone this repo and run `yarn` in your terminal at the project root.
