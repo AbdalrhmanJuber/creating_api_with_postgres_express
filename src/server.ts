@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import { validateEnv } from "./config/env";
 import { connectDB } from "./config/database";
 import { errorHandler } from "./middlewares/errorHandler";
-import { RATE_LIMIT } from "./config/constants";
 import morgan from "morgan";
 import { apiRateLimit } from "./config/rateLimits";
 

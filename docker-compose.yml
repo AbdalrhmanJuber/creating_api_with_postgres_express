@@ -59,6 +59,11 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      TEST_DB_NAME: ${TEST_DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT}
+      BCRYPT_PASSWORD: ${BCRYPT_PASSWORD}
+      SALT_ROUNDS: ${SALT_ROUNDS}
 
   # Test service
   app-test:
