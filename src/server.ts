@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import userRoutes from "./routes/userRoutes";
 import productRoutes from "./routes/productRoutes";
+import orderRoutes from "./routes/orderRoutes";
 import dotenv from "dotenv";
 import { validateEnv } from "./config/env";
 import { connectDB } from "./config/database";
@@ -24,6 +25,7 @@ app.use(morgan(logFormat));
 
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.get("/", function (_req: Request, res: Response) {
   res.send("Hello World!");
